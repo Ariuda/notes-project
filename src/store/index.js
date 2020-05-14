@@ -1,30 +1,21 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import router from '../router/index'
+import auth from './modules/auth'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   strict: true,
   state: {
-    categories: [
-      {name: 'work', tasks: [
-        {title: 'Meeting', comments: 'prepare notes', deadline: '2020-05-31T09:00', created: '02-05-2020, 17:00', complete: false},
-        {title: 'Project', comments: 'prepare schedule', deadline: '2020-05-31T09:00', created: '01-05-2020, 17:00', complete: false},
-      ]},
-      {name: 'exercise', tasks: [
-        {title: 'Yoga class', comments: 'take mat', deadline: '2020-05-31T09:00', created: '02-05-2020, 17:00', complete: false},
-        {title: 'Pilates class', comments: '', deadline: '2020-05-31T09:00', created: '01-05-2020, 17:00', complete: false},
-      ]},
-      
-    ],
+    categories: [],
     selectedCategory: null,
     selectedTask: null,
     data: [],
-    signedIn: null
   },
   getters: {
+    categories: state => state.categories,
     selectedTask: state => state.selectedTask,
-    signedIn: state => state.signedIn
   },
   mutations: {
     activeCategory: (state, payload) => {
@@ -41,7 +32,8 @@ export default new Vuex.Store({
             comments: payload.comments,
             deadline: payload.deadline,
             created: payload.created,
-            completed: payload.completed
+            completed: payload.completed,
+            taskID: payload.taskID
           })
         }
       })
@@ -85,12 +77,8 @@ export default new Vuex.Store({
           tasks: []
         })
       },
-      loadData: (state, data) => {
-        state.data = data;
-        console.log('server :)');
-      },
-      signIn: (state, result) => {
-        state.signedIn = result
+      getTasks: (state, payload) => {
+        state.categories = payload
       }
   },
   actions: {
@@ -101,13 +89,76 @@ export default new Vuex.Store({
       context.commit('activeTask', payload)
     },
     addTask: (context, payload) => {
-      context.commit('addTask', payload)
+
+      let query = router.currentRoute.params.id
+      let url = `http://localhost:3000/categories/${query}`
+      fetch(url, {
+        method: 'post',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          task: payload,
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message === 'success') {
+          payload.taskID = data.id
+          console.log(payload);
+          context.commit('addTask', payload)
+        } else {
+          console.log('something went wrong');
+        }
+        
+      })
+      .catch(err => {
+        console.log(err);
+      })
+
     },
-    editTask: (context, payload) => {
-      context.commit('editTask', payload)
+    editTask: (context, payload) => {      
+
+      let p = router.currentRoute.params.id;
+      let q = router.currentRoute.query;
+      let url = `http://localhost:3000/categories/${p}?q1=${q.q1}`
+
+      fetch(url, {
+        headers: {'Content-Type': 'application/json'},
+        method: 'put',
+        body: JSON.stringify({
+          com: payload.comments,
+          deadline: payload.deadline,
+          title: payload.title
+          })
+        })
+        .then(response => response.json())
+        .then((data) => {
+          if (data === 'success') {
+            context.commit('editTask', payload)
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        })
+
     },
     deleteTask: (context, payload) => {
-      context.commit('deleteTask', payload)
+
+      let p = router.currentRoute.params.id;
+      let q = router.currentRoute.query;
+      let url = `http://localhost:3000/categories/${p}?q1=${q.q1}`
+
+      fetch(url, {
+        method: 'delete',
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data === 'success') {
+          context.commit('deleteTask', payload)
+        }
+      })
+      .catch(err => {
+        console.log(err)
+      })
     },
     saveFolder: (context, payload) => {
       context.commit('saveFolder', payload)
@@ -115,59 +166,24 @@ export default new Vuex.Store({
     completed: (context, payload) => {
       context.commit('completed', payload)
     },
-    loadData: (context) => {
-      fetch('http://localhost:3000')
-      .then(response => response.json())
-      .then(data => {
-        context.commit('loadData', data)
-      }).catch(err => {
-        console.log(err);
-      })
-    },
-    signIn: (context, payload) => {
-      if (payload.email && payload.password) {
-        fetch('http://localhost:3000/signin', {
-          method: 'post',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            email: payload.email,
-            password: payload.password
-          })
-        })
-        .then((response) => response.json())
-        .then(data => {
-          if(data === 'success') {
-            context.commit('signIn', 1)
-          } else {
-            context.commit('signIn', -2)
-          }
-        }) 
-      } else {
-        context.commit('signIn', -1)
-      }
-    },
-    register: (context, payload) => {
-      if (payload.name && payload.email && payload.password) {
-        fetch('http://localhost:3000/register', {
-          method: 'post',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            name: payload.name,
-            email: payload.email,
-            password: payload.password
-          })
-        })
+    getTasks: (context) => {
+      let query = router.currentRoute.params.id
+      let url = `http://localhost:3000/categories/${query}`
+        fetch(url)
         .then(response => response.json())
         .then(data => {
-          console.log(data);
-          context.commit('signIn', 1)
+          if (data.message === 'success') {
+            context.commit('getTasks', data.result)
+          } else {
+            console.log('no tasks available');
+          }
+        }).catch(err => {
+          console.log(err);
+          
         })
-        .catch(err => {
-          console.log(err)
-        })
-      }
-    },
+    }
   },
   modules: {
+    auth
   }
 })

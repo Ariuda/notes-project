@@ -1,11 +1,12 @@
 <template>
   <div class="tasks-view">
+    <router-link :to="{ name: 'Home' }" class="go-back-btn">&lsaquo; go back</router-link>
     <section class="categories column center">
-    <h1>Categories</h1>
+   <h1>Categories</h1>
     <div class="row">
       <ul class="row">
-          <li v-for="(category, i) in categories" :key="i" @click="activeCategory(category)">
-              <span>{{ category.name }}</span>
+          <li v-for="(category, i) in categories" :key="i" @click="activeCategory(category, $event)">
+              <span>{{ category.folder }}</span>
           </li>
       </ul>
       <div v-if="!createFolder" @click="createFolder = !createFolder" class="new-folder">Add</div>
@@ -16,18 +17,26 @@
       </div>
     </div>
     </section>
+    <section v-if="categories.length === 0">
+      <p>It looks empty in here, you can create your first folder by clicking the Add button above</p>
+    </section>
     <section class="tasks" v-if="selectedCategory">
-      <div class="add-btn" @click="addNewTask = !addNewTask, show = !show">Add new note</div>
+      <div class="add-btn row end">
+        <span @click="addNewTask = !addNewTask, show = !show">New note</span>
+      </div>
       <ul class="row center">
         <li v-for="(task, i) in selectedCategory.tasks" :key="i" class="column center between task">
-          <div class="column center">
-            <span>{{ task.title }}</span>
+          <div class="column center" :style="cssColor">
+            <span class="note-title">{{ task.title }}</span>
             <span class="small-text">Created on {{ task.created }}</span>
           </div>
           <span>{{ task.comments }}</span>
-          <div class="row between">
+          <div class="column center">
             <span class="small-text">Due on {{ task.deadline }}</span>
-            <input type="checkbox" @click="completed(task)">
+            <div class="row center">
+              <span class="small-text">Mark as completed</span>
+              <input type="checkbox" @click="completed(task)">
+            </div>
           </div>
           <div class="row between task-btns">
             <span @click="updateTask = !updateTask, show = !show, activeTask(task)">Edit</span>
@@ -66,7 +75,10 @@ export default {
         updateTask: null,
         show: null,
         createFolder: null,
-        newFolder: null
+        newFolder: null,
+        id: null,
+        cssVars: null,
+
 
       }
     },
@@ -77,6 +89,11 @@ export default {
       selectedCategory() {
         return this.$store.state.selectedCategory
       },
+      cssColor() {
+        return {
+          'border-bottom': '2px solid ' + this.cssVars
+        }
+      },
       
 
       ...mapGetters([
@@ -86,10 +103,11 @@ export default {
     methods: {
       ...mapActions([
         'completed',
-        'activeCategory',
+        //'activeCategory',
         'activeTask',
-        'deleteTask',
-        'saveFolder'
+        //'deleteTask',
+        'saveFolder',
+
         
       ]),
       closeForm() {
@@ -97,6 +115,20 @@ export default {
         this.addNewTask = null
         this.updateTask = null
       },
+      deleteTask(task) {
+          this.$router.replace({ query: { q1: task.taskID } })
+          this.$store.dispatch('deleteTask' , task);
+      },
+      activeCategory(category, event) {
+        let color = event.target;
+        this.cssVars = getComputedStyle(color).backgroundColor;
+        this.$store.dispatch('activeCategory' , category);
+      }
+    },
+    created() {
+      this.id = this.$route.params.id
+      //let user = this.$store.state.activeUser.uid
+      this.$store.dispatch('getTasks');
     }
 }
 </script>
@@ -104,23 +136,25 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
 
-$first-option: #FF9300;
-$second-option: #4E0091;
-$third-option: #15A584;
-$fourth-option: #C10077;
-
 $colorTheme: #FF9300, #4E0091, #15A584, #C10077;
 $colorThemeLenght: length($colorTheme);
 
+.tasks-view {
+  background: #f1f1f1;
+  padding: 10px;
+}
+
 .categories {
     width: 90%;
-    margin: 0 auto;
-    background: #ffffffad;
     border: none;
     border-radius: 10px;
     padding: 15px;
   h1 {
-    margin: 0px auto 10px auto;
+      text-align: center;
+      font-size: 1.7em;
+      margin: 30px auto;
+      text-transform: uppercase;
+      color: #464646;
   }  
   ul {
     margin: 0px;
@@ -142,7 +176,7 @@ $colorThemeLenght: length($colorTheme);
     width: 90px;
     padding: 20px 40px;
     border-radius: 10px;
-    border: 1px solid rgb(119, 119, 119);
+    background: white;
     text-align: center;
   }
 }
@@ -155,19 +189,38 @@ $colorThemeLenght: length($colorTheme);
 }
 
 .tasks {
+  .add-btn{
+    span {
+      margin-right: 10px;
+      padding: 10px 20px;
+      border: 1px solid #5800FF;
+      color: #5800FF;
+      border-radius: 15px;
+    }
+  }
   ul {
+    flex-wrap: wrap;
     li {
       list-style: none;
       width: 250px;
       height: 200px;
-      border: 1px solid rgb(204, 204, 204);
       margin: 10px;
-      padding: 15px;
-      border: 1px solid grey;
+      padding: 35px;
       border-radius: 10px;
-      background: none !important;
-      & div:first-of-type {
+      background: white !important;
+      box-shadow: 5px 5px 6px 0px #e0e0e0; 
+      div {
+        width: 100%;
+        &:first-of-type {
+          padding-bottom: 5px;
+        }
+      }  
+      .note-title {
         font-size: 1.2em;
+        text-transform: capitalize;
+      }    
+      .small-text {
+        font-size: .8em;
       }
       .task-btns {
         span {

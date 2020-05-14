@@ -32,7 +32,8 @@ export default {
     },
     computed: {
       ...mapGetters({
-        signedIn: 'signedIn'
+        signedIn: 'signedIn',
+        activeUser: 'activeUser'
       //  'saleProducts',
       })
     },
@@ -55,7 +56,7 @@ export default {
       }
     },
     created() {
-      this.$store.dispatch('loadData');
+      //this.$store.dispatch('loadData');
     },
   
 

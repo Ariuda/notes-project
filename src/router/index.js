@@ -3,6 +3,8 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import Signin from '../views/Signin.vue'
 import Register from '../views/Register.vue'
+import Categories from '../components/Categories.vue'
+import Calendar from '../components/Calendar.vue'
 import store from '../store/index.js'
 
 Vue.use(VueRouter)
@@ -26,7 +28,16 @@ Vue.use(VueRouter)
     name: 'Register',
     component: Register
   },
-
+  {
+    path: '/categories/:id',
+    name: 'Categories',
+    component: Categories
+  },
+  {
+    path: '/calendar/:id',
+    name: 'Calendar',
+    component: Calendar
+  },
 
   /*
   {
@@ -46,7 +57,7 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  let isAuthenticated = store.state.signedIn;
+  let isAuthenticated = store.getters.signedIn;
 
   if (to.matched.some(rec => rec.meta.requiresAuth)) {
     if (isAuthenticated === 1) {

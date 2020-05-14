@@ -41,14 +41,20 @@ export default {
     },
     methods: {
       ...mapActions([
-        'editTask'
+        //'editTask'
       ]),
+      editTask(update) {
+        this.$router.replace({ query: { q1: update.taskID } })
+        this.$store.dispatch('editTask', update)
+        console.log(update);
+      }
     },
     created() {
       this.update = {
         title: this.selectedTask.title,
         comments: this.selectedTask.comments,
-        deadline: this.selectedTask.deadline
+        deadline: this.selectedTask.deadline,
+        taskID: this.selectedTask.taskID
       }
     }
 }

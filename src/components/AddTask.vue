@@ -30,13 +30,17 @@ export default {
           comments: null,
           deadline: null,
           created: new Date().toLocaleString(),
-          completed: false
+          completed: false,
+          folder: this.selectedCategory
         }
       }
     },
     computed: {
       categories() {
        return this.$store.state.categories
+      },
+      selectedCategory() {
+        return this.$store.state.selectedCategory
       },
 
       ...mapGetters([
@@ -46,6 +50,9 @@ export default {
       ...mapActions([
         'addTask'
       ]),
+    },
+    created() {
+      this.newTask.folder = this.$store.state.selectedCategory.folder
     }
 }
 </script>

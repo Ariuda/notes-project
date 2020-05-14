@@ -62,6 +62,9 @@ export default {
   &.between {
     justify-content: space-between;
   }
+  &.end {
+    justify-content: flex-end;
+  }
 }
 
 .column {
@@ -76,8 +79,8 @@ export default {
   }
 }
 
-.small-text {
-  font-size: .8em;
+.go-back-btn {
+  margin: 10px;
 }
 
 </style>
